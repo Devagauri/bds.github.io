@@ -1,0 +1,965 @@
+DECLARE
+ V_ROLLNO STUDENT_1.ROLLNO%TYPE;
+ V_COURSECODE STUDENT_1.COURSECODE%TYPE;
+ V_MARKS STUDENT_1.MARKS%TYPE;
+ CURSOR STUDENT_CUR IS SELECT ROLLNO,COURSECODE,MARKS FROM STUDENT_1 ORDER BY MARKS DESC;
+ V_COUNT NUMBER :=0;
+ LESS_THAN_7 EXCEPTION;
+BEGIN
+ OPEN STUDENT_CUR;
+ LOOP 
+   FETCH STUDENT_CUR INTO V_ROLLNO,V_COURSECODE,V_MARKS;
+   EXIT WHEN STUDENT_CUR%NOTFOUND;
+   V_COUNT :=V_COUNT+1;
+   INSERT INTO MARKS_DETAILS(ROLLNO,COURSECODE,MARKS)
+   VALUES (V_ROLLNO,V_COURSECODE,V_MARKS);
+   DBMS_OUTPUT.PUT_LINE(V_ROLLNO||' '||V_COURSECODE||' '||V_MARKS);
+   IF V_COUNT =7 THEN
+      EXIT;
+   END IF;
+  END LOOP;
+  CLOSE STUDENT_CUR;
+  IF V_COUNT<7 THEN
+     RAISE LESS_THAN_7;
+  END IF;
+  EXCEPTION
+     WHEN LESS_THAN_7 THEN
+        DBMS_OUTPUT.PUT_LINE('ERROR:LESS THAN 7 ROWS');
+END;
+
+
+
+
+DECLARE
+ V_COST NUMBER;
+ V_COUNT NUMBER :=0;
+ CURSOR CATLOG_CUR IS SELECT COST FROM CATLOG ORDER BY COST DESC;
+ LESS_THAN_10 EXCEPTION;
+BEGIN
+ OPEN CATLOG_CUR ;
+LOOP
+ FETCH CATLOG_CUR INTO V_COST;
+ EXIT WHEN CATLOG_CUR%NOTFOUND OR CATLOG_CUR%ROWCOUNT>10;
+ V_COUNT:=V_COUNT+1;
+ 
+ INSERT INTO CATLOG (PID,COST) 
+ SELECT PID,COST
+ FROM CATLOG
+ WHERE COST = V_COST;
+ DBMS_OUTPUT.PUT_LINE(V_COST);
+ IF V_COUNT =10 THEN
+   EXIT;
+ END IF;
+END LOOP;
+CLOSE CATLOG_CUR;
+IF V_COUNT<10 THEN
+ RAISE LESS_THAN_10;
+END IF;
+
+EXCEPTION
+ WHEN LESS_THAN_10 THEN
+   DBMS_OUTPUT.PUT_LINE('ERROR:GHJK');
+END;
+
+
+
+
+
+CREATE OR REPLACE PROCEDURE QUERY_EMP
+(P_ID IN EMPLOYEES.EMPLOYEE_ID%TYPE,
+ P_NAME OUT EMPLOYEES.LAST_NAME%TYPE,
+ P_SALARY OUT EMPLOYEES.SALARY%TYPE,
+ P_COMM OUT EMPLOYEES.COMMISSION_PCT%TYPE)
+IS
+BEGIN
+ SELECT LAST_NAME,SALARY,COMMISSION_PCT
+ INTO P_NAME,P_SALARY,P_COMM
+ FROM EMPLOYEES
+ WHERE EMPLOYEE_ID = P_ID;
+END QUERY_EMP;
+
+
+
+-- Create DEPARTMENT table
+CREATE TABLE department (
+    deptId VARCHAR2(10) PRIMARY KEY,
+    name VARCHAR2(50) NOT NULL,
+    location VARCHAR2(50)
+);
+
+-- Create STUDENT table
+CREATE TABLE student11(
+    rollNo VARCHAR2(10) PRIMARY KEY,
+    name VARCHAR2(50) NOT NULL,
+    degree VARCHAR2(50),
+    year NUMBER(1),
+    sex CHAR(1) CHECK (sex IN ('M', 'F')),
+    deptId VARCHAR2(10) REFERENCES department(deptId),
+    advisor VARCHAR2(50)
+);
+
+CREATE OR REPLACE PROCEDURE get_girl_students_by_dept(
+    p_dept_name IN VARCHAR2,
+    p_results OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN p_results FOR
+        SELECT s.rollNo, s.name
+        FROM student11 s
+        JOIN department d ON s.deptId = d.deptId
+        WHERE UPPER(d.name) = UPPER(p_dept_name)
+        AND s.sex = 'F';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error in get_girl_students_by_dept: ' || SQLERRM);
+        RAISE;
+END get_girl_students_by_dept;
+
+
+DECLARE
+   a int;
+BEGIN
+   FOR a in 1..10
+   LOOP
+   DBMS_OUTPUT.PUT_LINE(a);
+   END LOOP;
+END;
+
+
+SELECT * FROM EMPLOYEES WHERE HIRE_DATE > TO_DATE('01-JAN-1981','DD-MM-YYYY');
+
+DECLARE
+  V_SALARY NUMBER(10,2);
+  V_DEPTNO NUMBER NOT NULL := 60;
+BEGIN 
+  SELECT SUM(SALARY)
+  INTO V_SALARY
+  FROM EMPLOYEES
+  WHERE DEPARTMENT_ID = V_DEPTNO;
+  DBMS_OUTPUT.PUT_LINE('THE SUM OF SALARY IS '||V_SALARY);
+END;
+
+
+
+
+CREATE OR REPLACE FUNCTION count_male_students(
+    p_dept_name IN VARCHAR2
+) RETURN NUMBER
+IS
+    v_male_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_male_count
+    FROM student11 s
+    JOIN department d ON s.deptId = d.deptId
+    WHERE UPPER(d.name) = UPPER(p_dept_name)
+    AND s.sex = 'M';
+    
+    RETURN v_male_count;
+
+END count_male_students;
+
+
+
+CREATE OR REPLACE FUNCTION count_male_students(
+    p_dept_name IN VARCHAR2
+) RETURN NUMBER
+IS
+    v_male_count NUMBER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_male_count
+    FROM student11 s
+    JOIN department d ON s.deptId = d.deptId
+    WHERE UPPER(d.name) = UPPER(p_dept_name)
+    AND s.sex = 'M';
+    
+    RETURN v_male_count;
+    
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN 0;  -- Return 0 if no male students found
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error in count_male_students: ' || SQLERRM);
+        RETURN -1;  
+END count_male_students;
+
+
+
+CREATE OR REPLACE FUNCTION GET_ACCOUNT(
+F_ACCOUNNO IN NUMBER,
+F_BRANCH IN ACCOUNT.BRANCH%TYPE)
+RETURN NUMBER
+IS
+NO_OFACC NUMBER;
+BEGIN
+SELECT COUNT(*)
+INTO NO_OFACC
+FROM ACCOUNT A
+WHERE A.BRANCH = 'ALANDI';
+RETURN NO_OFACC;
+END GET_ACCOUNT;
+
+package nikita;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class LoanManagement {
+    private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:xe";
+    private static final String DB_USER = "hr";
+    private static final String DB_PASS = "hr";
+
+    public static void main(String[] args) {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+                System.out.println("Connected to Oracle Database!");
+                Scanner input = new Scanner(System.in);
+                int option;
+                do {
+                    System.out.println("\n----- Loan Management System -----");
+                    System.out.println("1. Add Loan");
+                    System.out.println("2. View All Loans");
+                    System.out.println("3. Update Loan");
+                    System.out.println("4. Delete Loan");
+                    System.out.println("5. Search Loan by Branch");
+                    System.out.println("6. Exit");
+                    System.out.print("Enter your choice: ");
+                    option = input.nextInt();
+                    input.nextLine();
+
+                    switch (option) {
+                        case 1: addLoan(conn, input); break;
+                        case 2: viewLoans(conn); break;
+                        case 3: updateLoan(conn, input); break;
+                        case 4: deleteLoan(conn, input); break;
+                        case 5: searchByBranch(conn, input); break;
+                        case 6: System.out.println("Exiting..."); break;
+                        default: System.out.println("Invalid option.");
+                    }
+                } while (option != 6);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void addLoan(Connection conn, Scanner input) throws SQLException {
+        System.out.print("Loan Number: ");
+        String ln = input.nextLine();
+        System.out.print("Branch Name: ");
+        String branch = input.nextLine();
+        System.out.print("Amount: ");
+        double amt = input.nextDouble();
+        input.nextLine();
+
+        String sql = "INSERT INTO Loan VALUES (?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, ln);
+            ps.setString(2, branch);
+            ps.setDouble(3, amt);
+            int rows = ps.executeUpdate();
+            System.out.println(rows > 0 ? "Loan added." : "Failed to add.");
+        }
+    }
+
+    private static void viewLoans(Connection conn) throws SQLException {
+        String sql = "SELECT * FROM Loan";
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            System.out.printf("%-15s %-20s %-10s%n", "Loan Number", "Branch Name", "Amount");
+            System.out.println("---------------------------------------------");
+            while (rs.next()) {
+                System.out.printf("%-15s %-20s %-10.2f%n",
+                        rs.getString("loan_number"),
+                        rs.getString("branch_name"),
+                        rs.getDouble("amount"));
+            }
+        }
+    }
+
+    private static void updateLoan(Connection conn, Scanner input) throws SQLException {
+        System.out.print("Enter Loan Number to update: ");
+        String ln = input.nextLine();
+
+        System.out.print("New Branch Name: ");
+        String branch = input.nextLine();
+        System.out.print("New Amount: ");
+        double amt = input.nextDouble();
+        input.nextLine();
+
+        String sql = "UPDATE Loan SET branch_name = ?, amount = ? WHERE loan_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, branch);
+            ps.setDouble(2, amt);
+            ps.setString(3, ln);
+            int rows = ps.executeUpdate();
+            System.out.println(rows > 0 ? "Loan updated." : "Loan not found.");
+        }
+    }
+
+    private static void deleteLoan(Connection conn, Scanner input) throws SQLException {
+        System.out.print("Enter Loan Number to delete: ");
+        String ln = input.nextLine();
+        String sql = "DELETE FROM Loan WHERE loan_number = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, ln);
+            int rows = ps.executeUpdate();
+            System.out.println(rows > 0 ? "Loan deleted." : "Loan not found.");
+        }
+    }
+
+    private static void searchByBranch(Connection conn, Scanner input) throws SQLException {
+        System.out.print("Enter Branch Name to search: ");
+        String branch = input.nextLine();
+        String sql = "SELECT * FROM Loan WHERE branch_name LIKE ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%" + branch + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                boolean found = false;
+                while (rs.next()) {
+                    found = true;
+                    System.out.printf("%-15s %-20s %-10.2f%n",
+                            rs.getString("loan_number"),
+                            rs.getString("branch_name"),
+                            rs.getDouble("amount"));
+                }
+                if (!found) System.out.println("No records found.");
+            }
+        }
+    }
+}
+
+
+
+package jdbcdbms;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class j1 {
+    private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:xe";
+    private static final String DB_USER = "hr";
+    private static final String DB_PASS = "hr";
+
+    public static void main(String[] args) {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+
+            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
+                System.out.println("Successfully connected to the Oracle database!");
+
+                Scanner input = new Scanner(System.in);
+                int option;
+
+                do {
+                    System.out.println("\n-----------------Books Management-----------------");
+                    System.out.println("1. Add a Book");
+                    System.out.println("2. Display All Books");
+                    System.out.println("3. Modify Book Details");
+                    System.out.println("4. Remove a Book");
+                    System.out.println("5. Find Books by Author");
+                    System.out.println("6. Exit");
+                    System.out.print("Choose an option: ");
+                    option = input.nextInt();
+                    input.nextLine();
+
+                    switch (option) {
+                        case 1:
+                            insertBook(conn, input);
+                            break;
+                        case 2:
+                            listAllBooks(conn);
+                            break;
+                        case 3:
+                            editBook(conn, input);
+                            break;
+                        case 4:
+                            removeBook(conn, input);
+                            break;
+                        case 5:
+                            findBooksByAuthor(conn, input);
+                            break;
+                        case 6:
+                            System.out.println("Goodbye!");
+                            break;
+                        default:
+                            System.out.println("Invalid option. Please try again.");
+                    }
+                } while (option != 6);
+
+            } catch (SQLException ex) {
+                System.err.println("Error connecting to the database: " + ex.getMessage());
+            }
+        } catch (ClassNotFoundException ex) {
+            System.err.println("Oracle JDBC Driver not found: " + ex.getMessage());
+        }
+    }
+
+    private static void insertBook(Connection conn, Scanner input) throws SQLException {
+        System.out.println("\n--- Add New Book ---");
+        System.out.print("Enter Accession Number: ");
+        String accNo = input.nextLine();
+        System.out.print("Enter Book Title: ");
+        String bookTitle = input.nextLine();
+        System.out.print("Enter Author Name: ");
+        String bookAuthor = input.nextLine();
+        System.out.print("Enter Book Price: ");
+        double bookPrice = input.nextDouble();
+        input.nextLine();
+        System.out.print("Enter Publisher Name: ");
+        String bookPublisher = input.nextLine();
+
+        String query = "INSERT INTO Books (Accession_No, Title, Author, Price, Publisher) VALUES (?, ?, ?, ?, ?)";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, accNo);
+            stmt.setString(2, bookTitle);
+            stmt.setString(3, bookAuthor);
+            stmt.setDouble(4, bookPrice);
+            stmt.setString(5, bookPublisher);
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Book successfully added!");
+            }
+        }
+    }
+
+    private static void listAllBooks(Connection conn) throws SQLException {
+        System.out.println("\n--- List of All Books ---");
+        String query = "SELECT * FROM Books";
+
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            System.out.printf("%-15s %-30s %-20s %-10s %-20s%n",
+                    "Accession No", "Title", "Author", "Price", "Publisher");
+            System.out.println("-----------------------------------------------------------------------------");
+
+            while (rs.next()) {
+                String accNo = rs.getString("Accession_No");
+                String title = rs.getString("Title");
+                String author = rs.getString("Author");
+                double price = rs.getDouble("Price");
+                String publisher = rs.getString("Publisher");
+
+                System.out.printf("%-15s %-30s %-20s %-10.2f %-20s%n",
+                        accNo, title, author, price, publisher);
+            }
+        }
+    }
+
+    private static void editBook(Connection conn, Scanner input) throws SQLException {
+        System.out.println("\n--- Update Book Details ---");
+        System.out.print("Enter Accession Number of the book to update: ");
+        String accNo = input.nextLine();
+
+        System.out.print("Enter new Title (leave blank to keep unchanged): ");
+        String newTitle = input.nextLine();
+        System.out.print("Enter new Author (leave blank to keep unchanged): ");
+        String newAuthor = input.nextLine();
+        System.out.print("Enter new Price (enter 0 to keep unchanged): ");
+        String priceInput = input.nextLine();
+        double newPrice = priceInput.isEmpty() ? -1 : Double.parseDouble(priceInput);
+        System.out.print("Enter new Publisher (leave blank to keep unchanged): ");
+        String newPublisher = input.nextLine();
+
+        StringBuilder query = new StringBuilder("UPDATE Books SET ");
+        boolean addComma = false;
+
+        if (!newTitle.isEmpty()) {
+            query.append("Title = ?");
+            addComma = true;
+        }
+        if (!newAuthor.isEmpty()) {
+            if (addComma) query.append(", ");
+            query.append("Author = ?");
+            addComma = true;
+        }
+        if (newPrice >= 0) {
+            if (addComma) query.append(", ");
+            query.append("Price = ?");
+            addComma = true;
+        }
+        if (!newPublisher.isEmpty()) {
+            if (addComma) query.append(", ");
+            query.append("Publisher = ?");
+        }
+
+        query.append(" WHERE Accession_No = ?");
+
+        try (PreparedStatement stmt = conn.prepareStatement(query.toString())) {
+            int index = 1;
+
+            if (!newTitle.isEmpty()) {
+                stmt.setString(index++, newTitle);
+            }
+            if (!newAuthor.isEmpty()) {
+                stmt.setString(index++, newAuthor);
+            }
+            if (newPrice >= 0) {
+                stmt.setDouble(index++, newPrice);
+            }
+            if (!newPublisher.isEmpty()) {
+                stmt.setString(index++, newPublisher);
+            }
+
+            stmt.setString(index, accNo);
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Book details updated successfully!");
+            } else {
+                System.out.println("No book found with the given Accession Number.");
+            }
+        }
+    }
+
+    private static void removeBook(Connection conn, Scanner input) throws SQLException {
+        System.out.println("\n--- Delete Book ---");
+        System.out.print("Enter Accession Number of the book to delete: ");
+        String accNo = input.nextLine();
+
+        String query = "DELETE FROM Books WHERE Accession_No = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, accNo);
+
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Book deleted successfully!");
+            } else {
+                System.out.println("No book found with the given Accession Number.");
+            }
+        }
+    }
+
+    private static void findBooksByAuthor(Connection conn, Scanner input) throws SQLException {
+        System.out.println("\n--- Search Books by Author ---");
+        System.out.print("Enter Author Name: ");
+        String authorName = input.nextLine();
+
+        String query = "SELECT * FROM Books WHERE Author LIKE ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, "%" + authorName + "%");
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                System.out.printf("%-15s %-30s %-20s %-10s %-20s%n",
+                        "Accession No", "Title", "Author", "Price", "Publisher");
+                System.out.println("-----------------------------------------------------------------------------");
+
+                boolean found = false;
+                while (rs.next()) {
+                    found = true;
+                    String accNo = rs.getString("Accession_No");
+                    String title = rs.getString("Title");
+                    String author = rs.getString("Author");
+                    double price = rs.getDouble("Price");
+                    String publisher = rs.getString("Publisher");
+
+                    System.out.printf("%-15s %-30s %-20s %-10.2f %-20s%n",
+                            accNo, title, author, price, publisher);
+                }
+
+                if (!found) {
+                    System.out.println("No books found for the given author.");
+                }
+            }
+        }
+    }
+}
+
+
+
+
+CREATE OR REPLACE TRIGGER trg_update_marks
+BEFORE UPDATE ON Student01
+FOR EACH ROW
+BEGIN
+IF :NEW.Marks!=:OLD.Marks THEN
+ :NEW.Marks := :NEW.Marks*1.1;
+END IF;
+END;
+
+UPDATE Student01
+SET Marks = 90
+WHERE rollno = 2;
+SELECT * FROM Student01;
+
+UPDATE Student01 SET Marks = 68 WHERE rollno = 40;
+
+CREATE OR REPLACE TRIGGER trg_insert
+BEFORE UPDATE ON Student01
+FOR EACH ROW
+BEGIN
+IF :NEW.Marks IS  NULL THEN
+:NEW.Marks := 50;
+END IF;
+END;
+/ 
+UPDATE Student01
+SET Marks = NULL
+WHERE rollno = 4; 
+---------------------------
+CREATE OR REPLACE TRIGGER trg_innsert
+BEFORE INSERT OR UPDATE ON Student01
+FOR EACH ROW
+BEGIN
+IF :NEW.Marks IS NULL THEN
+:NEW.Marks:=50;
+END IF;
+END;
+/
+INSERT INTO Student01(Name, rollno,Marks) VALUES ('Ravi', 26,NULL);
+---------------------------------------------------------------------------
+
+CREATE OR REPLACE TRIGGER trg_mark
+BEFORE UPDATE ON Student01
+FOR EACH ROW
+BEGIN
+IF :NEW.Marks !=:OLD.Marks AND :NEW.Marks IS NOT NULL THEN 
+:NEW.Marks:= :NEW.Marks+(:NEW.Marks*0.05);
+END IF;
+END;
+
+UPDATE Student01 SET Marks = 10 WHERE rollno = 2;
+SELECT * FROM Student01;
+-----------------------------------------------------------
+CREATE OR REPLACE TRIGGER trg_new_uuv
+AFTER UPDATE ON Student01
+FOR EACH ROW
+BEGIN
+IF :NEW.Marks < 0 THEN
+RAISE_APPLICATION_ERROR(-20001, 'Marks cannot be negative HE HE');
+END IF;
+END;
+INSERT INTO Student01(Name, rollno,Marks) VALUES ('Ravi', 19,-15);
+-------------------------
+CREATE OR REPLACE TRIGGER trg_prevent_topper_delete
+BEFORE DELETE ON Student01
+FOR EACH ROW
+BEGIN
+   IF :OLD.Marks > 90 THEN
+      RAISE_APPLICATION_ERROR(-20002, 'Cannot delete toppers!');
+   END IF;
+END;
+/
+DELETE FROM Student01 WHERE rollno = 1; 
+
+-----------------------------------
+CREATE OR REPLACE TRIGGER trg_replace
+BEFORE INSERT ON Student01
+FOR EACH ROW
+BEGIN
+IF :NEW.rollno IS NULL THEN
+:NEW.rollno := TRUNC(DBMS_RANDOM.VALUE(100,320));
+END IF;
+END;
+INSERT INTO Student01(Name, Marks,rollno) VALUES ('Ravi', 85,NULL);
+-------------------------------------------------
+CREATE OR REPLACE TRIGGER trg_student_marks_update
+FOR UPDATE ON Student01
+COMPOUND TRIGGER
+
+-- Declare any local variables if needed
+  v_old_marks Student01.Marks%TYPE;
+
+  -- Before the update to validate marks
+  BEFORE EACH ROW IS
+  BEGIN
+    IF :NEW.Marks < 0 THEN
+      RAISE_APPLICATION_ERROR(-20001, 'Marks cannot be negative!');
+    END IF;
+  END BEFORE EACH ROW;
+
+  -- After the update to send a congratulatory message if marks are high
+  AFTER EACH ROW IS
+  BEGIN
+    IF :NEW.Marks > 90 THEN
+      DBMS_OUTPUT.PUT_LINE('Congratulations ' || :NEW.Name || ', you have scored ' || :NEW.Marks || ' marks!');
+    END IF;
+  END AFTER EACH ROW;
+
+END trg_student_marks_update;
+/
+
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class JDBCExample {
+
+    // Database credentials
+    static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:xe"; // Oracle DB URL
+    static final String USER = "your_username"; // Replace with your Oracle DB username
+    static final String PASS = "your_password"; // Replace with your Oracle DB password
+
+    // Create connection
+    private static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, USER, PASS);
+    }
+
+    // CREATE: Insert a record
+    public static void create(int id, String name, String email) {
+        String query = "INSERT INTO users (id, name, email) VALUES (?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, id);
+            pstmt.setString(2, name);
+            pstmt.setString(3, email);
+            pstmt.executeUpdate();
+            System.out.println("Record inserted successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // READ: Retrieve records
+    public static void read() {
+        String query = "SELECT * FROM users";
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("name");
+                String email = rs.getString("email");
+                System.out.println("ID: " + id + ", Name: " + name + ", Email: " + email);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // UPDATE: Update a record
+    public static void update(int id, String name, String email) {
+        String query = "UPDATE users SET name = ?, email = ? WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, name);
+            pstmt.setString(2, email);
+            pstmt.setInt(3, id);
+            pstmt.executeUpdate();
+            System.out.println("Record updated successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // DELETE: Delete a record
+    public static void delete(int id) {
+        String query = "DELETE FROM users WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+            System.out.println("Record deleted successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Main method to take user input for CRUD operations
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("Select operation: ");
+            System.out.println("1. Create");
+            System.out.println("2. Read");
+            System.out.println("3. Update");
+            System.out.println("4. Delete");
+            System.out.println("5. Exit");
+            int choice = scanner.nextInt();
+            scanner.nextLine();  // Consume newline
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Enter ID: ");
+                    int idCreate = scanner.nextInt();
+                    scanner.nextLine();  // Consume newline
+                    System.out.println("Enter Name: ");
+                    String nameCreate = scanner.nextLine();
+                    System.out.println("Enter Email: ");
+                    String emailCreate = scanner.nextLine();
+                    create(idCreate, nameCreate, emailCreate);
+                    break;
+
+                case 2:
+                    read();
+                    break;
+
+                case 3:
+                    System.out.println("Enter ID to update: ");
+                    int idUpdate = scanner.nextInt();
+                    scanner.nextLine();  // Consume newline
+                    System.out.println("Enter new Name: ");
+                    String nameUpdate = scanner.nextLine();
+                    System.out.println("Enter new Email: ");
+                    String emailUpdate = scanner.nextLine();
+                    update(idUpdate, nameUpdate, emailUpdate);
+                    break;
+
+                case 4:
+                    System.out.println("Enter ID to delete: ");
+                    int idDelete = scanner.nextInt();
+                    delete(idDelete);
+                    break;
+
+                case 5:
+                    System.out.println("Exiting...");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+}
+
+
+
+SELECT EMPLOYEES.FIRST_NAME,DEPARTMENTS.DEPARTMENT_NAME FROM EMPLOYEES JOIN DEPARTMENTS ON EMPLOYEES.DEPARTMENT_ID = DEPARTMENTS.DEPARTMENT_ID;
+
+CREATE TABLE STUDENTS12(
+STUDENT_ID NUMBER PRIMARY KEY,
+NAME VARCHAR(110),
+COURSE1_ID NUMBER,
+FOREIGN KEY (COURSE1_ID) REFERENCES COURSE1(COURSE1_ID)
+);
+
+CREATE TABLE COURSE1(
+COURSE1_ID NUMBER PRIMARY KEY,
+COURSE1_NAME VARCHAR(10)
+); 
+
+BEGIN
+INSERT INTO COURSE1(COURSE1_ID,COURSE1_NAME) VALUES (1,'DFGH');
+INSERT INTO STUDENTS12(STUDENT_ID,NAME,COURSE1_ID) VALUES (1,'DFGH',1);
+
+END;
+
+SELECT STUDENTS12.NAME,COURSE1.COURSE1_NAME FROM STUDENTS12 JOIN COURSE1 ON STUDENTS12.COURSE1_ID=COURSE1.COURSE1_ID;
+
+
+SELECT  * FROM EMPLOYEES;
+
+
+SELECT FIRST_NAME,DEPARTMENT_ID FROM EMPLOYEES WHERE DEPARTMENT_ID =60;
+SELECT * FROM EMPLOYEES ORDER BY SALARY DESC;
+
+SELECT AVG(SALARY) FROM EMPLOYEES;
+SELECT SUM(SALARY),DEPARTMENT_ID FROM EMPLOYEES GROUP BY DEPARTMENT_ID HAVING SUM(SALARY)>20000;
+
+SELECT FIRST_NAME,SALARY FROM EMPLOYEES WHERE SALARY>(SELECT AVG(SALARY) FROM EMPLOYEES);
+
+
+// Start MongoDB Shell
+mongosh
+
+// Use or create database
+use database_name
+
+// Note: Database is not physically created until data is inserted.
+
+// Drop a collection
+db.collection_name.drop()
+
+// Insert one document
+db.collection_name.insertOne({ key: value })
+
+// Explicitly create a collection
+db.createCollection("mycollection")
+
+// Show all databases
+show databases
+
+// Show all collections
+show collections
+
+// Switch to a database
+use database_name
+
+// Insert many documents
+db.collection_name.insertMany([{ key1: value1 }, { key2: value2 }, { key3: value3 }])
+
+// Find all documents
+db.collection_name.find()
+
+// Find documents with condition
+db.collection_name.find({ key: value })
+
+// Find documents with multiple conditions
+db.collection_name.find({ key1: value1, key2: value2 })
+
+// Find limited number of documents
+db.collection_name.find().limit(number)
+
+// Find and sort documents
+db.collection_name.find().sort({ field: 1 })    // Ascending
+db.collection_name.find().sort({ field: -1 })   // Descending
+
+// Update one document
+db.collection_name.updateOne(
+  { condition },
+  { $set: { field: value } }
+)
+
+// Comparison operators examples
+// Less than
+{ field: { $lt: value } }
+// Less than or equal
+{ field: { $lte: value } }
+// Greater than
+{ field: { $gt: value } }
+// Greater than or equal
+{ field: { $gte: value } }
+
+// Logical operators examples
+db.collection_name.find({
+  $and: [
+    { field1: { $eq: value1 } },
+    { field2: { $eq: value2 } }
+  ]
+})
+
+db.collection_name.find({
+  $or: [
+    { field1: { $eq: value1 } },
+    { field2: { $eq: value2 } }
+  ]
+})
+
+// Other important operators
+// $group, $avg, $sum, $ne (not equal), $in, $all
+
+// Find with regex (pattern matching)
+db.collection_name.find({ field: { $regex: /pattern/ } })
+
+// Aggregation using $match
+db.collection_name.aggregate([
+  { $match: { country: "Spain", city: "Salamanca" } }
+])
+
+// Aggregation using $group
+db.collection_name.aggregate([
+  { $group: { _id: "$name", totalDocument: { $sum: 1 } } }
+])
+
+// Complex find query using $or
+db.collection_name.find({
+  $or: [
+    { post_by: "tutorials_point" },
+    { title: "MongoDB Overview" }
+  ],
+  likes: { $gte: 600 }
+})
+
+// Another aggregation example
+db.collection_name.aggregate([
+  { $group: { _id: "$name", totalDocument: { $sum: 1 } } }
+])
